@@ -1,0 +1,615 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BizPilot AI · Workspace</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="app-body">
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <a class="brand" href="#">
+      <span class="brand-mark">✦</span>
+      <span>
+        <b>BizPilot <i>AI</i></b>
+        <small>Smarter Business. Simpler.</small>
+      </span>
+    </a>
+
+    <div class="workspace-label">WORKSPACE</div>
+
+    <nav id="navigation">
+      <button class="nav-item active" data-view="overview">
+        ▦ <span>Overview</span>
+      </button>
+
+      <button class="nav-item" data-view="customers">
+        ♧ <span>Customers</span>
+      </button>
+
+      <button class="nav-item" data-view="invoices">
+        ▤ <span>Invoices</span>
+      </button>
+
+      <button class="nav-item" data-view="tasks">
+        ☑ <span>Tasks</span>
+      </button>
+
+      <button class="nav-item" data-view="assistant">
+        ✦ <span>AI Assistant</span>
+      </button>
+
+      <button class="nav-item admin-only" data-view="team">
+        ♙ <span>Team & access</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="help-card">
+        <span>✦</span>
+        <b>Need a hand?</b>
+        <p>Your business overview, all in one place.</p>
+      </div>
+
+      <button id="logoutButton" class="nav-item logout">
+        ↪ <span>Sign out</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main-area">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+
+      <button
+        id="menuButton"
+        class="icon-button mobile-menu"
+        aria-label="Open menu">
+        ☰
+      </button>
+
+      <div class="searchbox">
+        ⌕
+        <input
+          id="globalSearch"
+          placeholder="Search customers, invoices, tasks...">
+      </div>
+
+      <div class="top-profile">
+        <div class="avatar" id="avatar">H</div>
+
+        <div>
+          <b id="profileName">Your account</b>
+          <small id="profileRole">User</small>
+        </div>
+
+        <button
+          id="profileLogout"
+          class="icon-button"
+          aria-label="Sign out">
+          ⌄
+        </button>
+      </div>
+
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <section class="page-content">
+
+      <div class="page-title-row">
+        <div>
+          <span class="eyebrow" id="pageEyebrow">
+            YOUR WORKSPACE
+          </span>
+
+          <h1 id="pageTitle">
+            Good to see you <span>✦</span>
+          </h1>
+
+          <p id="pageSubtitle">
+            Here is what's happening in your business today.
+          </p>
+        </div>
+
+        <div id="dateLabel" class="date-chip"></div>
+      </div>
+
+      <div id="notice" class="notice" role="status"></div>
+
+      <!-- OVERVIEW -->
+      <section id="view-overview" class="view">
+
+        <div class="metric-grid">
+
+          <article class="metric-card mint">
+            <div class="metric-top">
+              <span class="metric-icon">♧</span>
+              <span class="metric-label">Customers</span>
+            </div>
+            <strong id="customerCount">—</strong>
+            <small>Customer records</small>
+          </article>
+
+          <article class="metric-card peach">
+            <div class="metric-top">
+              <span class="metric-icon">▤</span>
+              <span class="metric-label">Invoices</span>
+            </div>
+            <strong id="invoiceCount">—</strong>
+            <small>Invoices created</small>
+          </article>
+
+          <article class="metric-card lilac">
+            <div class="metric-top">
+              <span class="metric-icon">₹</span>
+              <span class="metric-label">Total invoiced</span>
+            </div>
+            <strong id="totalInvoiced">₹0</strong>
+            <small>All invoice amounts</small>
+          </article>
+
+          <article class="metric-card rose">
+            <div class="metric-top">
+              <span class="metric-icon">◷</span>
+              <span class="metric-label">Awaiting payment</span>
+            </div>
+            <strong id="pendingTotal">₹0</strong>
+            <small>Pending invoices</small>
+          </article>
+
+        </div>
+
+        <div class="content-grid">
+
+          <article class="panel wide-panel">
+
+            <div class="panel-heading">
+              <div>
+                <h2>Recent activity</h2>
+                <p>A quick look at your business records</p>
+              </div>
+
+              <span class="soft-tag">LIVE DATA</span>
+            </div>
+
+            <div id="activityList" class="activity-list">
+              <p class="muted">Loading your data…</p>
+            </div>
+
+          </article>
+
+          <article class="panel">
+
+            <div class="panel-heading">
+              <div>
+                <h2>Payment snapshot</h2>
+                <p>Paid versus pending</p>
+              </div>
+            </div>
+
+            <div class="payment-ring" id="paymentRing">
+              <div>
+                <strong id="paidPercent">0%</strong>
+                <small>paid</small>
+              </div>
+            </div>
+
+            <div class="legend-row">
+              <span><i class="dot green"></i> Paid</span>
+              <b id="paidTotal">₹0</b>
+            </div>
+
+            <div class="legend-row">
+              <span><i class="dot orange"></i> Pending</span>
+              <b id="pendingLegend">₹0</b>
+            </div>
+
+          </article>
+
+        </div>
+
+        <div class="panel-heading section-heading">
+          <div>
+            <h2>Quick actions</h2>
+            <p>Common tasks, one click away</p>
+          </div>
+        </div>
+
+        <div class="quick-grid">
+
+          <button class="quick-action mint" data-action="customer">
+            <span>＋</span>
+            <b>Add customer</b>
+            <small>Create a customer record</small>
+          </button>
+
+          <button class="quick-action peach" data-action="invoice">
+            <span>＋</span>
+            <b>Create invoice</b>
+            <small>Record an invoice amount</small>
+          </button>
+
+          <button class="quick-action lilac" data-action="task">
+            <span>＋</span>
+            <b>Add a task</b>
+            <small>Keep work moving</small>
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- CUSTOMERS -->
+      <section id="view-customers" class="view hidden">
+
+        <div class="panel">
+
+          <div class="panel-heading">
+            <div>
+              <h2>Customers</h2>
+              <p>Customer records saved in PostgreSQL</p>
+            </div>
+
+            <button class="btn btn-primary" data-action="customer">
+              ＋ Add customer
+            </button>
+          </div>
+
+          <form id="customerForm" class="inline-form hidden">
+            <input
+              id="customerName"
+              placeholder="Customer name"
+              required
+              maxlength="100">
+
+            <input
+              id="customerEmail"
+              type="email"
+              placeholder="Customer email"
+              required>
+
+            <button class="btn btn-primary" type="submit">
+              Save customer
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light"
+              data-cancel="customer">
+              Cancel
+            </button>
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Added</th>
+                  <th></th>
+                </tr>
+              </thead>
+
+              <tbody id="customersTable"></tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- INVOICES -->
+      <section id="view-invoices" class="view hidden">
+
+        <div class="panel">
+
+          <div class="panel-heading">
+            <div>
+              <h2>Invoices</h2>
+              <p>Track amounts and payment status</p>
+            </div>
+
+            <button class="btn btn-primary" data-action="invoice">
+              ＋ Create invoice
+            </button>
+          </div>
+
+          <form id="invoiceForm" class="inline-form hidden">
+
+            <select id="invoiceCustomer" required>
+              <option value="">Choose customer</option>
+            </select>
+
+            <input
+              id="invoiceAmount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="Amount (₹)"
+              required>
+
+            <button class="btn btn-primary" type="submit">
+              Save invoice
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light"
+              data-cancel="invoice">
+              Cancel
+            </button>
+
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody id="invoicesTable"></tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- TASKS -->
+      <section id="view-tasks" class="view hidden">
+
+        <div class="panel">
+
+          <div class="panel-heading">
+            <div>
+              <h2>Tasks</h2>
+              <p>Keep track of the next steps</p>
+            </div>
+
+            <button class="btn btn-primary" data-action="task">
+              ＋ Add task
+            </button>
+          </div>
+
+          <form id="taskForm" class="inline-form hidden">
+
+            <input
+              id="taskTitle"
+              placeholder="What needs to be done?"
+              required
+              maxlength="200">
+
+            <select id="taskPriority">
+              <option>Medium</option>
+              <option>Low</option>
+              <option>High</option>
+            </select>
+
+            <button class="btn btn-primary" type="submit">
+              Save task
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light"
+              data-cancel="task">
+              Cancel
+            </button>
+
+          </form>
+
+          <div class="task-list" id="tasksList"></div>
+
+        </div>
+
+      </section>
+
+      <!-- AI ASSISTANT -->
+      <section id="view-assistant" class="view hidden">
+
+        <div class="panel">
+
+          <div class="panel-heading">
+            <div>
+              <h2>BizPilot AI Assistant ✦</h2>
+              <p>
+                Get help understanding your business records
+                and planning your next steps.
+              </p>
+            </div>
+          </div>
+
+          <!-- Chat workspace -->
+          <div class="chat-workspace">
+
+            <!-- Chat history sidebar -->
+            <aside class="chat-sidebar">
+
+              <div class="chat-sidebar-heading">
+                <h2>Your Chats</h2>
+
+                <button
+                  id="newChatButton"
+                  class="btn btn-primary"
+                  type="button">
+                  + New Chat
+                </button>
+              </div>
+
+              <div id="chatHistory" class="chat-history">
+                <p class="muted">Your conversations will appear here.</p>
+              </div>
+
+            </aside>
+
+            <!-- Chat conversation -->
+            <div class="chat-panel">
+
+              <div
+                id="chatMessages"
+                class="chat-messages"
+                aria-live="polite">
+
+                <div class="chat-message assistant">
+                  <strong>BizPilot AI</strong>
+
+                  <div class="chat-message-content">
+                    Hi! I'm BizPilot AI. Ask me about your business.
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Message input -->
+              <form id="chatForm" class="chat-form">
+
+                <input
+                  id="chatInput"
+                  type="text"
+                  placeholder="Ask about invoices, customers or tasks..."
+                  maxlength="2000"
+                  autocomplete="off"
+                  required>
+
+                <button
+                  id="chatSendButton"
+                  class="btn btn-primary"
+                  type="submit">
+                  Send
+                </button>
+
+              </form>
+
+              <p class="chat-hint">
+                Ask questions about your business records.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- TEAM & ACCESS -->
+      <section id="view-team" class="view hidden">
+
+        <div class="metric-grid admin-metrics">
+
+          <article class="metric-card mint">
+            <small>Team members</small>
+            <strong id="teamCount">—</strong>
+          </article>
+
+          <article class="metric-card peach">
+            <small>Customer records</small>
+            <strong id="adminCustomers">—</strong>
+          </article>
+
+          <article class="metric-card lilac">
+            <small>Invoices</small>
+            <strong id="adminInvoices">—</strong>
+          </article>
+
+          <article class="metric-card rose">
+            <small>Tasks</small>
+            <strong id="adminTasks">—</strong>
+          </article>
+
+        </div>
+
+        <div class="panel">
+
+          <div class="panel-heading">
+            <div>
+              <h2>Team & access</h2>
+              <p>
+                Only admins can create accounts or deactivate them.
+              </p>
+            </div>
+          </div>
+
+          <form id="userForm" class="user-form">
+
+            <input
+              id="newUserName"
+              placeholder="Full name"
+              required
+              maxlength="100">
+
+            <input
+              id="newUserEmail"
+              type="email"
+              placeholder="Email address"
+              required>
+
+            <input
+              id="newUserPassword"
+              type="password"
+              placeholder="Temporary password (12+ chars)"
+              minlength="12"
+              required>
+
+            <select id="newUserRole">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+
+            <button class="btn btn-primary" type="submit">
+              Create account
+            </button>
+
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Access</th>
+                </tr>
+              </thead>
+
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+</div>
+
+<!-- NOTIFICATION -->
+<div id="toast" class="toast" role="status"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

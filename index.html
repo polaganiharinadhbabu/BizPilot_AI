@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BizPilot AI · Sign in</title><link rel="stylesheet" href="style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="login-body">
+  <main class="login-shell">
+    <section class="login-brand">
+      <div class="brand-mark">✦</div><div class="brand-name">BizPilot <span>AI</span></div>
+      <p>Smarter business. Simpler.</p>
+      <div class="brand-art"><div class="art-orbit"></div><div class="art-card"><span>↗</span><strong>Grow with clarity</strong><small>Customers · Invoices · Tasks</small></div></div>
+      <small class="muted">One calm place to run your business.</small>
+    </section>
+    <section class="login-panel">
+      <div class="mobile-brand"><span class="brand-mark">✦</span><strong>BizPilot <span>AI</span></strong></div>
+      <div class="login-heading"><span class="eyebrow">WELCOME BACK</span><h1>Sign in to your workspace</h1><p>Use your company account to continue.</p></div>
+      <form id="loginForm" class="form-stack">
+        <label>Email address<input id="email" type="email" autocomplete="username" placeholder="you@company.com" required></label>
+        <label>Password<div class="password-wrap"><input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button type="button" id="togglePassword" class="show-password">Show</button></div></label>
+        <div class="form-row"><label class="check-label"><input id="remember" type="checkbox"> Remember this session</label><span class="muted tiny">Secure sign-in</span></div>
+        <button class="btn btn-primary full" type="submit">Sign in <span>→</span></button>
+      </form>
+      <div class="separator"><span>or continue with</span></div>
+      <div id="googleButton" class="google-wrap"><p class="muted tiny">Google sign-in is available after the administrator creates your account and Google OAuth is configured.</p><div id="g_id_onload" data-client_id="" data-context="signin" data-ux_mode="popup" data-callback="handleGoogleCredential" data-auto_prompt="false"></div><div id="g_id_signin"></div></div>
+      <p id="loginMessage" class="message" role="status"></p>
+      <p class="login-foot">Need access? Contact your BizPilot administrator.</p>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body></html>
