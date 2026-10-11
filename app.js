@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = window.BIZPILOT_API || "https://bizpilot-ai-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 const page = location.pathname.split("/").pop();
 
