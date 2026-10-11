@@ -184,3 +184,41 @@
     flex-basis: 100%;
   }
 }
+
+
+/* MOBILE LOGIN RESPONSIVENESS */
+@media (max-width: 760px) {
+  .login-body {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .login-shell {
+    display: block;
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .login-brand {
+    display: none;
+  }
+
+  .login-panel {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: clamp(28px, 7vw, 48px) clamp(20px, 6vw, 40px);
+  }
+
+  .mobile-brand {
+    display: flex;
+  }
+
+  .login-heading h1 {
+    font-size: clamp(25px, 4vw, 30px);
+  }
+}
