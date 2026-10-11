@@ -25,7 +25,7 @@ app = FastAPI(
 )
 bearer_scheme = HTTPBearer(auto_error=False)
 origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5500")
-origins = list(dict.fromkeys([origin, "http://localhost:5500", "http://127.0.0.1:5500"]))
+origins = list(dict.fromkeys([origin, "https://polaganiharinadhbabu.github.io", "http://localhost:5500", "http://127.0.0.1:5500"]))
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], allow_headers=["Authorization", "Content-Type"])
 
 app.include_router(chatbot_router)
