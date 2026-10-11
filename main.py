@@ -84,6 +84,44 @@ def health(db: Session = Depends(get_db)):
     db.execute(select(1))
     return {"status": "ok", "database": "connected"}
 
+@app.post("/auth/bootstrap-admin", status_code=201)
+def bootstrap_admin(
+    data: dict,
+    x_bootstrap_secret: str | None = Header(default=None),
+    db: Session = Depends(get_db)
+):
+    # One-time setup endpoint. Keep BOOTSTRAP_SECRET configured only until the
+    # first account is created, then remove it from the Render environment.
+    configured_secret = os.getenv("BOOTSTRAP_SECRET", "")
+    if not configured_secret or not x_bootstrap_secret or not __import__("secrets").compare_digest(x_bootstrap_secret, configured_secret):
+        raise HTTPException(status_code=403, detail="Invalid bootstrap secret.")
+
+    if db.scalar(select(models.User.id).limit(1)):
+        raise HTTPException(status_code=409, detail="Bootstrap is disabled because a user account already exists.")
+
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 100:
+        raise HTTPException(status_code=422, detail="Enter a valid name.")
+    if not isinstance(email, str) or "@" not in email or len(email) > 255:
+        raise HTTPException(status_code=422, detail="Enter a valid email.")
+    if not isinstance(password, str) or len(password) < 12 or len(password) > 128:
+        raise HTTPException(status_code=422, detail="Password must be 12 to 128 characters.")
+
+    user = models.User(
+        name=name.strip(),
+        email=email.strip().lower(),
+        password_hash=hash_password(password),
+        role="admin",
+        is_active=1
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"message": "Initial admin created. Remove BOOTSTRAP_SECRET from Render now.", "user": user_view(user)}
+
+
 @app.post("/auth/login")
 def login(data: schemas.LoginInput, db: Session = Depends(get_db)):
     user = authenticate_user(db, data.email, data.password)
