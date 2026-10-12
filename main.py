@@ -43,8 +43,6 @@ app.include_router(chatbot_router)
 
 
 def require_business_user(user=Depends(get_current_user)):
-    if user.role == "admin":
-        raise HTTPException(status_code=403, detail="Admins cannot access private customer, invoice, task, or business-summary data.")
     return user
 
 def user_view(user):
@@ -313,8 +311,7 @@ def change_user_status(user_id: int, data: dict, db: Session = Depends(get_db), 
 @app.get("/customers")
 def list_customers(db: Session = Depends(get_db), user=Depends(require_business_user)):
     query = select(models.Customer).order_by(models.Customer.id.desc())
-    if user.role != "admin":
-        query = query.where(models.Customer.owner_id == user.id)
+    query = query.where(models.Customer.owner_id == user.id)
     rows = db.scalars(query).all()
     return [{"id": x.id, "name": x.name, "email": x.email, "created_at": x.created_at} for x in rows]
 
@@ -329,8 +326,8 @@ def create_customer(data: schemas.CustomerInput, db: Session = Depends(get_db), 
 @app.delete("/customers/{customer_id}")
 def delete_customer(customer_id: int, db: Session = Depends(get_db), user=Depends(require_business_user)):
     item = db.get(models.Customer, customer_id)
-    if not item or (user.role != "admin" and item.owner_id != user.id): raise HTTPException(status_code=404, detail="Customer not found.")
-    if db.scalar(select(models.Invoice.id).where(models.Invoice.customer_id == customer_id).limit(1)):
+    if not item or item.owner_id != user.id: raise HTTPException(status_code=404, detail="Customer not found.")
+    if db.scalar(select(models.Invoice.id).where(models.Invoice.customer_id == customer_id, models.Invoice.owner_id == user.id).limit(1)):
         raise HTTPException(status_code=409, detail="Cannot delete a customer who has invoices.")
     db.delete(item); db.commit()
     return {"message": "Customer deleted."}
@@ -338,15 +335,14 @@ def delete_customer(customer_id: int, db: Session = Depends(get_db), user=Depend
 @app.get("/invoices")
 def list_invoices(db: Session = Depends(get_db), user=Depends(require_business_user)):
     query = select(models.Invoice, models.Customer.name).join(models.Customer, models.Invoice.customer_id == models.Customer.id).order_by(models.Invoice.id.desc())
-    if user.role != "admin":
-        query = query.where(models.Invoice.owner_id == user.id)
+    query = query.where(models.Invoice.owner_id == user.id)
     rows = db.execute(query).all()
     return [{"id": inv.id, "customer_id": inv.customer_id, "customer_name": name, "amount": float(inv.amount), "status": inv.status, "created_at": inv.created_at} for inv, name in rows]
 
 @app.post("/invoices", status_code=201)
 def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(get_db), user=Depends(require_business_user)):
     customer = db.get(models.Customer, data.customer_id)
-    if not customer or (user.role != "admin" and customer.owner_id != user.id):
+    if not customer or customer.owner_id != user.id:
         raise HTTPException(status_code=404, detail="Customer not found.")
     item = models.Invoice(customer_id=data.customer_id, owner_id=user.id, amount=data.amount, status="Pending")
     db.add(item); db.commit(); db.refresh(item)
@@ -356,7 +352,7 @@ def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(get_db), us
 def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = Depends(get_db), user=Depends(require_business_user)):
     """Update an existing invoice without creating a new invoice ID."""
     item = db.get(models.Invoice, invoice_id)
-    if not item or (user.role != "admin" and item.owner_id != user.id):
+    if not item or item.owner_id != user.id:
         raise HTTPException(status_code=404, detail="Invoice not found.")
     customer = db.get(models.Customer, data.customer_id)
     if not customer or (user.role != "admin" and customer.owner_id != user.id):
@@ -381,8 +377,7 @@ def list_tasks(
 ):
     query = select(models.Task).order_by(models.Task.id.desc())
 
-    if user.role != "admin":
-        query = query.where(models.Task.assigned_to == user.id)
+    query = query.where(models.Task.assigned_to == user.id)
 
     rows = db.scalars(query).all()
 
@@ -406,15 +401,7 @@ def create_task(
     db: Session = Depends(get_db),
     user=Depends(require_business_user)
 ):
-    assigned_to = data.assigned_to
-
-    if user.role != "admin":
-        assigned_to = user.id
-    elif assigned_to is not None and not db.get(models.User, assigned_to):
-        raise HTTPException(
-            status_code=404,
-            detail="Assigned user not found."
-        )
+    assigned_to = user.id
 
     item = models.Task(
         title=data.title.strip(),
@@ -453,7 +440,7 @@ def update_task(
             detail="Task not found."
         )
 
-    if user.role != "admin" and item.assigned_to != user.id:
+    if item.assigned_to != user.id:
         raise HTTPException(
             status_code=403,
             detail="You cannot update another user's task."
@@ -561,13 +548,12 @@ def dashboard(db: Session = Depends(get_db), user=Depends(require_business_user)
     paid_query = select(func.coalesce(func.sum(models.Invoice.amount), 0)).where(models.Invoice.status == "Paid")
     pending_query = select(func.coalesce(func.sum(models.Invoice.amount), 0)).where(models.Invoice.status != "Paid")
     task_query = select(func.count(models.Task.id))
-    if user.role != "admin":
-        customer_query = customer_query.where(models.Customer.owner_id == user.id)
-        invoice_query = invoice_query.where(models.Invoice.owner_id == user.id)
-        total_query = total_query.where(models.Invoice.owner_id == user.id)
-        paid_query = paid_query.where(models.Invoice.owner_id == user.id)
-        pending_query = pending_query.where(models.Invoice.owner_id == user.id)
-        task_query = task_query.where(models.Task.assigned_to == user.id)
+    customer_query = customer_query.where(models.Customer.owner_id == user.id)
+    invoice_query = invoice_query.where(models.Invoice.owner_id == user.id)
+    total_query = total_query.where(models.Invoice.owner_id == user.id)
+    paid_query = paid_query.where(models.Invoice.owner_id == user.id)
+    pending_query = pending_query.where(models.Invoice.owner_id == user.id)
+    task_query = task_query.where(models.Task.assigned_to == user.id)
     customers = db.scalar(customer_query) or 0
     invoices = db.scalar(invoice_query) or 0
     total = db.scalar(total_query) or Decimal("0")
@@ -580,15 +566,7 @@ def dashboard(db: Session = Depends(get_db), user=Depends(require_business_user)
 def admin_overview(db: Session = Depends(get_db), admin=Depends(require_admin)):
     total_users = db.scalar(select(func.count(models.User.id))) or 0
     active_users = db.scalar(select(func.count(models.User.id)).where(models.User.is_active == 1)) or 0
-    inactive_users = total_users - active_users
-    return {
-        "users": total_users,
-        "active_users": active_users,
-        "inactive_users": inactive_users,
-        "privacy_mode": "enabled",
-        "business_records_visible": False,
-        "api_status": "operational"
-    }
+    return {"users": total_users, "active_users": active_users, "inactive_users": total_users - active_users}
 
 @app.post("/assistant")
 def assistant(data: dict, user=Depends(get_current_user)):
