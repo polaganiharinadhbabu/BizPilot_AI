@@ -1,4 +1,9 @@
 import os
+import hashlib
+import secrets
+import smtplib
+from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from decimal import Decimal
 from typing import Optional
 from dotenv import load_dotenv
@@ -120,6 +125,105 @@ def bootstrap_admin(
     db.commit()
     db.refresh(user)
     return {"message": "Initial admin created. Remove BOOTSTRAP_SECRET from Render now.", "user": user_view(user)}
+
+
+
+@app.post("/auth/signup", status_code=201)
+def signup(data: dict, db: Session = Depends(get_db)):
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 100:
+        raise HTTPException(status_code=422, detail="Enter a valid name.")
+    if not isinstance(email, str) or "@" not in email or len(email) > 255:
+        raise HTTPException(status_code=422, detail="Enter a valid email address.")
+    if not isinstance(password, str) or len(password) < 12 or len(password) > 128:
+        raise HTTPException(status_code=422, detail="Password must be 12 to 128 characters.")
+    email = email.strip().lower()
+    if db.scalar(select(models.User.id).where(models.User.email == email)):
+        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+    user = models.User(name=name.strip(), email=email, password_hash=hash_password(password), role="user", is_active=1)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"message": "Account created successfully. You can now sign in.", "user": user_view(user)}
+
+
+def send_password_reset_email(email: str, reset_url: str):
+    host = os.getenv("SMTP_HOST")
+    username = os.getenv("SMTP_USERNAME")
+    password = os.getenv("SMTP_PASSWORD")
+    sender = os.getenv("SMTP_FROM", username or "")
+    if not all([host, username, password, sender]):
+        raise HTTPException(status_code=503, detail="Password reset email is not configured yet. Please contact the administrator.")
+    message = EmailMessage()
+    message["Subject"] = "Reset your BizPilot AI password"
+    message["From"] = sender
+    message["To"] = email
+    message.set_content(
+        "We received a request to reset your BizPilot AI password.\n\n"
+        f"Open this one-time link within 30 minutes:\n{reset_url}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+    port = int(os.getenv("SMTP_PORT", "587"))
+    with smtplib.SMTP(host, port, timeout=15) as smtp:
+        smtp.starttls()
+        smtp.login(username, password)
+        smtp.send_message(message)
+
+
+@app.post("/auth/password/forgot")
+def forgot_password(data: dict, db: Session = Depends(get_db)):
+    email = str(data.get("email", "")).strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=422, detail="Enter a valid email address.")
+    user = db.scalar(select(models.User).where(models.User.email == email, models.User.is_active == 1))
+    # Always use the same response for existing and unknown accounts.
+    if user:
+        raw_token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+        db.query(models.PasswordResetToken).filter(
+            models.PasswordResetToken.user_id == user.id,
+            models.PasswordResetToken.used_at.is_(None)
+        ).update({"used_at": datetime.now(timezone.utc)})
+        reset = models.PasswordResetToken(user_id=user.id, token_hash=token_hash, expires_at=expires_at)
+        db.add(reset)
+        db.commit()
+        base_url = os.getenv("PASSWORD_RESET_URL", "https://polaganiharinadhbabu.github.io/BizPilot_AI/reset-password.html")
+        reset_url = f"{base_url}?token={raw_token}"
+        try:
+            send_password_reset_email(user.email, reset_url)
+        except Exception:
+            db.delete(reset)
+            db.commit()
+            raise HTTPException(status_code=503, detail="Password reset email could not be sent. Please contact the administrator.")
+    return {"message": "If that email belongs to an active account, a password reset link will be sent."}
+
+
+@app.post("/auth/password/reset")
+def reset_password(data: dict, db: Session = Depends(get_db)):
+    raw_token = data.get("token")
+    new_password = data.get("password")
+    if not isinstance(raw_token, str) or len(raw_token) < 20:
+        raise HTTPException(status_code=400, detail="This reset link is invalid or expired.")
+    if not isinstance(new_password, str) or len(new_password) < 12 or len(new_password) > 128:
+        raise HTTPException(status_code=422, detail="Password must be 12 to 128 characters.")
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    reset = db.scalar(select(models.PasswordResetToken).where(
+        models.PasswordResetToken.token_hash == token_hash,
+        models.PasswordResetToken.used_at.is_(None),
+        models.PasswordResetToken.expires_at > datetime.now(timezone.utc)
+    ))
+    if not reset:
+        raise HTTPException(status_code=400, detail="This reset link is invalid or expired.")
+    user = db.get(models.User, reset.user_id)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=400, detail="This reset link is invalid or expired.")
+    user.password_hash = hash_password(new_password)
+    reset.used_at = datetime.now(timezone.utc)
+    db.commit()
+    return {"message": "Password updated. You can now sign in."}
 
 
 @app.post("/auth/login")
