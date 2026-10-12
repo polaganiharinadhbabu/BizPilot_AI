@@ -26,7 +26,7 @@
     <div class="workspace-label">WORKSPACE</div>
 
     <nav id="navigation">
-      <button class="nav-item active user-only" data-view="overview">
+      <button class="nav-item active" data-view="overview">
         ▦ <span>Overview</span>
       </button>
 
@@ -46,8 +46,8 @@
         ✦ <span>AI Assistant</span>
       </button>
 
-      <button class="nav-item admin-only" data-view="system">
-        ◈ <span>System & security</span>
+      <button class="nav-item" data-view="profile">
+        ◉ <span>My profile</span>
       </button>
       <button class="nav-item admin-only" data-view="team">
         ♙ <span>Team & access</span>
@@ -512,26 +512,6 @@
 
       </section>
 
-
-      <!-- SYSTEM & SECURITY -->
-      <section id="view-system" class="view hidden">
-        <div class="metric-grid admin-metrics">
-          <article class="metric-card mint"><small>Total accounts</small><strong id="systemUsers">—</strong></article>
-          <article class="metric-card peach"><small>Active accounts</small><strong id="systemActiveUsers">—</strong></article>
-          <article class="metric-card lilac"><small>Inactive accounts</small><strong id="systemInactiveUsers">—</strong></article>
-          <article class="metric-card rose"><small>API status</small><strong id="systemApiStatus">—</strong></article>
-        </div>
-        <div class="panel">
-          <div class="panel-heading"><div><h2>Privacy protection</h2><p>Admin tools are limited to account administration and platform health.</p></div><span class="soft-tag">PRIVACY FIRST</span></div>
-          <div class="activity-list">
-            <div class="activity-item"><span class="metric-icon">✓</span><div><b>Customers</b><p>Private to each account owner. Admin access is blocked.</p></div></div>
-            <div class="activity-item"><span class="metric-icon">✓</span><div><b>Invoices and tasks</b><p>Private user records. Admin access is blocked by the backend.</p></div></div>
-            <div class="activity-item"><span class="metric-icon">✓</span><div><b>AI chat history</b><p>Each conversation is accessible only to its owner, including admins.</p></div></div>
-            <div class="activity-item"><span class="metric-icon">✓</span><div><b>Account administration</b><p>Manage user account status without viewing private business records.</p></div></div>
-          </div>
-        </div>
-        <div class="panel"><div class="panel-heading"><div><h2>Platform controls</h2><p>Refresh privacy and account status indicators.</p></div></div><button id="refreshSystemButton" class="btn btn-primary" type="button">Refresh system status</button><p id="systemRefreshMessage" class="muted" role="status"></p></div>
-      </section>
 
       <!-- TEAM & ACCESS -->
       <section id="view-team" class="view hidden">
