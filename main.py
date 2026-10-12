@@ -375,10 +375,7 @@ def list_tasks(
     query = select(models.Task).order_by(models.Task.id.desc())
 
     if user.role != "admin":
-        query = query.where(
-            (models.Task.assigned_to == user.id) |
-            (models.Task.assigned_to.is_(None))
-        )
+        query = query.where(models.Task.assigned_to == user.id)
 
     rows = db.scalars(query).all()
 
@@ -536,7 +533,7 @@ def delete_task(
             detail="Task not found."
         )
 
-    if user.role != "admin" and item.assigned_to not in (None, user.id):
+    if user.role != "admin" and item.assigned_to != user.id:
         raise HTTPException(
             status_code=403,
             detail="You cannot delete another user's task."
@@ -601,7 +598,7 @@ def delete_invoice(
 ):
     item = db.get(models.Invoice, invoice_id)
 
-    if not item:
+    if not item or (user.role != "admin" and item.owner_id != user.id):
         raise HTTPException(
             status_code=404,
             detail="Invoice not found."
