@@ -104,6 +104,39 @@
 
       <div class="welcome-strip"><span class="welcome-spark">✦</span><div><b>Welcome to BizPilot AI</b><small>Your business command centre is ready.</small></div><span class="welcome-live"><i></i> Workspace</span></div>
 
+
+      <section id="adminHome" class="admin-home">
+        <div class="admin-hero">
+          <div>
+            <span class="admin-kicker">BIZPILOT CONTROL CENTER</span>
+            <h2>Admin overview</h2>
+            <p>Manage your workspace, team access and business activity from one place.</p>
+          </div>
+          <button class="admin-hero-action" type="button" data-view="team">Manage team <span>↗</span></button>
+          <div class="admin-hero-orbit" aria-hidden="true">✦</div>
+        </div>
+        <div class="admin-summary-grid">
+          <article class="admin-summary-card">
+            <div class="admin-summary-icon users-icon">♙</div>
+            <div><span>Total team members</span><strong id="adminHomeUsers">—</strong><small>Registered workspace accounts</small></div>
+          </article>
+          <article class="admin-summary-card">
+            <div class="admin-summary-icon active-icon">✓</div>
+            <div><span>Active accounts</span><strong id="adminHomeActive">—</strong><small>Can access the workspace</small></div>
+          </article>
+          <article class="admin-summary-card">
+            <div class="admin-summary-icon paused-icon">Ⅱ</div>
+            <div><span>Inactive accounts</span><strong id="adminHomeInactive">—</strong><small>Access currently disabled</small></div>
+          </article>
+        </div>
+        <div class="admin-control-grid">
+          <button type="button" class="admin-control-card" data-view="team"><span class="admin-control-symbol">♙</span><span><b>Team & permissions</b><small>Create accounts and manage roles</small></span><span class="admin-control-arrow">→</span></button>
+          <button type="button" class="admin-control-card" data-view="customers"><span class="admin-control-symbol customer-symbol">♧</span><span><b>Customer records</b><small>Review and manage customers</small></span><span class="admin-control-arrow">→</span></button>
+          <button type="button" class="admin-control-card" data-view="invoices"><span class="admin-control-symbol invoice-symbol">▤</span><span><b>Invoices & payments</b><small>Track billing and outstanding amounts</small></span><span class="admin-control-arrow">→</span></button>
+        </div>
+        <div class="admin-note"><span>✦</span><div><b>Administrator access</b><p>You have access to team controls. Changes to accounts affect who can sign in to BizPilot AI.</p></div></div>
+      </section>
+
       <div class="page-title-row">
         <div>
           <span class="eyebrow" id="pageEyebrow">
