@@ -1613,3 +1613,54 @@ switchView = function (name) {
     });
   }
 };
+
+/* SIGNUP AND PASSWORD RESET */
+$("signupForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  if (button) { button.disabled = true; button.textContent = "Creating account..."; }
+  try {
+    const name = $("signupName").value.trim();
+    const email = $("signupEmail").value.trim();
+    const password = $("signupPassword").value;
+    if (password !== $("confirmPassword").value) throw new Error("Passwords do not match.");
+    await api("/auth/signup", {method:"POST", body:JSON.stringify({name,email,password})});
+    showMessage("Account created! Redirecting to sign in...", false);
+    setTimeout(() => location.href = "index.html", 1000);
+  } catch (error) {
+    showMessage(error.message);
+    if (button) { button.disabled = false; button.textContent = "Create account"; }
+  }
+});
+
+$("forgotForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  if (button) { button.disabled = true; button.textContent = "Sending..."; }
+  try {
+    const data = await api("/auth/password/forgot", {method:"POST",body:JSON.stringify({email:$("forgotEmail").value.trim()})});
+    showMessage(data.message, false);
+  } catch (error) {
+    showMessage(error.message);
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Send reset link"; }
+  }
+});
+
+$("resetForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  if (button) { button.disabled = true; button.textContent = "Updating..."; }
+  try {
+    const password = $("newPassword").value;
+    if (password !== $("confirmNewPassword").value) throw new Error("Passwords do not match.");
+    const tokenValue = new URLSearchParams(location.search).get("token");
+    if (!tokenValue) throw new Error("Reset token is missing. Please use the link from your email.");
+    const data = await api("/auth/password/reset", {method:"POST",body:JSON.stringify({token:tokenValue,password})});
+    showMessage(data.message, false);
+    setTimeout(() => location.href = "index.html", 1200);
+  } catch (error) {
+    showMessage(error.message);
+    if (button) { button.disabled = false; button.textContent = "Reset password"; }
+  }
+});
