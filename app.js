@@ -281,10 +281,10 @@ function switchView(name) {
       "Team & access",
       "Manage team accounts and permissions."
     ],
-    system: [
-      "ADMINISTRATION",
-      "System & security",
-      "Monitor platform health without accessing private business records."
+    profile: [
+      "YOUR ACCOUNT",
+      "My profile",
+      "Manage your profile and review your own customer history."
     ],
     assistant: [
       "BIZPILOT AI",
@@ -324,11 +324,8 @@ function switchView(name) {
   if (name === "team" && currentUser?.role === "admin") {
     loadTeam().catch((error) => showToast(error.message));
   }
-  if (name === "system" && currentUser?.role === "admin") {
-    loadSystem().catch((error) => showToast(error.message));
-  }
-  if (currentUser?.role === "admin" && ["customers", "invoices", "tasks", "overview"].includes(name)) {
-    switchView("system");
+  if (name === "profile") {
+    loadProfile().catch((error) => showToast(error.message));
   }
 }
 
@@ -346,6 +343,31 @@ $("logoutButton")?.addEventListener("click", () => logout());
 
 $("profileLogout")?.addEventListener("click", () => logout());
 
+async function loadProfile() {
+  if ($("profileEditName")) $("profileEditName").value = currentUser?.name || "";
+  if ($("profileEditEmail")) $("profileEditEmail").value = currentUser?.email || "";
+  if (!$("profileCustomerHistory")) return;
+  const customers = await api("/customers");
+  if (!customers.length) { $("profileCustomerHistory").innerHTML = '<p class="muted">No customers in your account yet.</p>'; return; }
+  const histories = await Promise.all(customers.map((customer) => api("/customers/" + customer.id + "/history")));
+  $("profileCustomerHistory").innerHTML = histories.map((item) => {
+    const customer = item.customer;
+    const invoices = item.invoice_history.map((invoice) => '<p>Invoice #' + invoice.id + ' · ' + safe(invoice.status) + ' · ₹' + Number(invoice.amount).toFixed(2) + ' · ' + dateText(invoice.created_at) + '</p>').join("");
+    return '<div class="activity-item"><span class="metric-icon">♧</span><div><b>' + safe(customer.name) + '</b><p>' + safe(customer.email) + ' · Added ' + dateText(customer.created_at) + '</p>' + (invoices || '<p class="muted">No invoices yet.</p>') + '</div></div>';
+  }).join("");
+}
+
+$("profileForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    const updated = await api("/auth/profile", { method: "PATCH", body: JSON.stringify({ name: $("profileEditName").value.trim() }) });
+    currentUser = updated;
+    if ($("profileName")) $("profileName").textContent = updated.name;
+    if ($("avatar")) $("avatar").textContent = updated.name.trim().charAt(0).toUpperCase();
+    if ($("profileSaveMessage")) $("profileSaveMessage").textContent = "Profile saved.";
+    showToast("Profile updated.");
+  } catch (error) { showToast(error.message); }
+});
 // CUSTOMERS
 
 async function loadCustomers() {
@@ -653,16 +675,6 @@ function renderTasks() {
         : "No tasks in this status."}</p>`}
   `;
 }
-
-async function loadSystem() {
-  const data = await api("/admin/overview");
-  if ($("systemUsers")) $("systemUsers").textContent = data.users;
-  if ($("systemActiveUsers")) $("systemActiveUsers").textContent = data.active_users;
-  if ($("systemInactiveUsers")) $("systemInactiveUsers").textContent = data.inactive_users;
-  if ($("systemApiStatus")) $("systemApiStatus").textContent = data.api_status === "operational" ? "Online" : "Check";
-  if ($("systemRefreshMessage")) $("systemRefreshMessage").textContent = "Updated " + new Date().toLocaleTimeString("en-IN");
-}
-$("refreshSystemButton")?.addEventListener("click", () => loadSystem().catch((error) => showToast(error.message)));
 
 // TEAM
 
@@ -1223,8 +1235,6 @@ async function initDashboard() {
 
     if (currentUser.role === "admin") {
       document.body.classList.add("is-admin");
-      document.querySelectorAll('[data-view="overview"], [data-view="customers"], [data-view="invoices"], [data-view="tasks"]').forEach((node) => node.remove());
-      if ($("globalSearch")) $("globalSearch").placeholder = "Search accounts...";
     }
 
     if ($("dateLabel")) {
@@ -1235,12 +1245,7 @@ async function initDashboard() {
       });
     }
 
-    if (currentUser.role === "admin") {
-      switchView("system");
-      await loadSystem();
-    } else {
-      await loadDashboard();
-    }
+    await loadDashboard();
   } catch (error) {
     setNotice(error.message);
   }
