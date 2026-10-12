@@ -427,3 +427,5 @@ tbody tr:hover{background:#f8fcf9}
 .is-admin .page-title-row{margin-top:4px}
 @media(max-width:1050px){.admin-control-grid{grid-template-columns:1fr}.admin-summary-card{padding:16px}.admin-summary-card strong{font-size:25px}}
 @media(max-width:760px){.admin-hero{align-items:flex-start;flex-direction:column;padding:25px 22px}.admin-hero h2{font-size:27px}.admin-hero-orbit{right:-90px;top:-30px}.admin-summary-grid{grid-template-columns:1fr;gap:10px}.admin-summary-card{padding:15px}.admin-control-card{padding:15px}}
+
+.is-admin.admin-subpage #adminHome{display:none}
