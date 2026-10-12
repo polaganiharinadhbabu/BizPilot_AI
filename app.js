@@ -281,6 +281,11 @@ function switchView(name) {
       "Team & access",
       "Manage team accounts and permissions."
     ],
+    system: [
+      "ADMINISTRATION",
+      "System & security",
+      "Monitor platform health without accessing private business records."
+    ],
     assistant: [
       "BIZPILOT AI",
       "Smart Assistant ✦",
@@ -318,6 +323,12 @@ function switchView(name) {
 
   if (name === "team" && currentUser?.role === "admin") {
     loadTeam().catch((error) => showToast(error.message));
+  }
+  if (name === "system" && currentUser?.role === "admin") {
+    loadSystem().catch((error) => showToast(error.message));
+  }
+  if (currentUser?.role === "admin" && ["customers", "invoices", "tasks", "overview"].includes(name)) {
+    switchView("system");
   }
 }
 
@@ -643,6 +654,16 @@ function renderTasks() {
   `;
 }
 
+async function loadSystem() {
+  const data = await api("/admin/overview");
+  if ($("systemUsers")) $("systemUsers").textContent = data.users;
+  if ($("systemActiveUsers")) $("systemActiveUsers").textContent = data.active_users;
+  if ($("systemInactiveUsers")) $("systemInactiveUsers").textContent = data.inactive_users;
+  if ($("systemApiStatus")) $("systemApiStatus").textContent = data.api_status === "operational" ? "Online" : "Check";
+  if ($("systemRefreshMessage")) $("systemRefreshMessage").textContent = "Updated " + new Date().toLocaleTimeString("en-IN");
+}
+$("refreshSystemButton")?.addEventListener("click", () => loadSystem().catch((error) => showToast(error.message)));
+
 // TEAM
 
 async function loadTeam() {
@@ -657,17 +678,8 @@ async function loadTeam() {
     $("teamCount").textContent = overview.users;
   }
 
-  if ($("adminCustomers")) {
-    $("adminCustomers").textContent = overview.customers;
-  }
-
-  if ($("adminInvoices")) {
-    $("adminInvoices").textContent = overview.invoices;
-  }
-
-  if ($("adminTasks")) {
-    $("adminTasks").textContent = overview.tasks;
-  }
+  if ($("teamActiveUsers")) $("teamActiveUsers").textContent = overview.active_users;
+  if ($("teamInactiveUsers")) $("teamInactiveUsers").textContent = overview.inactive_users;
 
   if (!$("usersTable")) return;
 
@@ -1211,6 +1223,8 @@ async function initDashboard() {
 
     if (currentUser.role === "admin") {
       document.body.classList.add("is-admin");
+      document.querySelectorAll('[data-view="overview"], [data-view="customers"], [data-view="invoices"], [data-view="tasks"]').forEach((node) => node.remove());
+      if ($("globalSearch")) $("globalSearch").placeholder = "Search accounts...";
     }
 
     if ($("dateLabel")) {
@@ -1221,10 +1235,11 @@ async function initDashboard() {
       });
     }
 
-    await loadDashboard();
-
     if (currentUser.role === "admin") {
-      loadTeam().catch(() => {});
+      switchView("system");
+      await loadSystem();
+    } else {
+      await loadDashboard();
     }
   } catch (error) {
     setNotice(error.message);
