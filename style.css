@@ -229,6 +229,15 @@
 
 
 /* Sign-out icon in the dashboard top bar */
-#profileLogout{width:38px;height:38px;display:grid;place-items:center;border:1px solid #d9eee1;border-radius:12px;background:#e6f6ee;color:#0c6f4a;font-size:22px;font-weight:800;transition:background .18s,color .18s,transform .18s}
-#profileLogout:hover{background:#159765;color:#fff;transform:translateY(-1px)}
-#profileLogout:focus-visible{outline:3px solid #9de4bd;outline-offset:2px}
+
+
+
+/* Consistent dashboard layout and predictable sign-out placement */
+.sidebar{box-sizing:border-box;overflow-y:auto;overflow-x:hidden;align-self:start;z-index:25}
+.sidebar nav{flex:0 0 auto}
+.sidebar-bottom{margin-top:auto;padding-top:18px;flex-shrink:0}
+.help-card{margin-bottom:12px}
+#logoutButton{display:flex;align-items:center;gap:12px;min-height:46px;border:1px solid #3a5147;background:#263a32;color:#eaf3ed;border-radius:12px;padding:12px 14px;cursor:pointer}
+#logoutButton:hover,#logoutButton:focus-visible{background:#315442;color:#8ce8b8;outline:2px solid #68d7a0;outline-offset:2px}
+.top-profile{margin-left:auto;flex-shrink:0}
+@media(max-width:760px){.sidebar{height:100dvh;min-height:100dvh;overflow-y:auto}.sidebar-bottom{padding-bottom:calc(12px + env(safe-area-inset-bottom))}.help-card{margin-top:12px}}
