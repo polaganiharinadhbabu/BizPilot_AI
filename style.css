@@ -241,3 +241,87 @@
 #logoutButton:hover,#logoutButton:focus-visible{background:#315442;color:#8ce8b8;outline:2px solid #68d7a0;outline-offset:2px}
 .top-profile{margin-left:auto;flex-shrink:0}
 @media(max-width:760px){.sidebar{height:100dvh;min-height:100dvh;overflow-y:auto}.sidebar-bottom{padding-bottom:calc(12px + env(safe-area-inset-bottom))}.help-card{margin-top:12px}}
+
+
+/* Responsive polish: admin and workspace panels */
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{min-width:320px}
+button,input,select,textarea{font:inherit}
+button,a,select{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #86d9ad;outline-offset:2px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.app-layout,.main-area,.page-content,.view,.panel,.content-grid,.chat-workspace{min-width:0}
+.page-content{width:100%}
+.metric-card,.panel,.quick-action{overflow-wrap:anywhere}
+.table-wrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;border-radius:10px}
+table{min-width:520px}
+input,select,textarea{max-width:100%;font-size:16px}
+.btn,.nav-item,.quick-action,.table-action{min-height:42px;cursor:pointer;transition:background-color .18s ease,border-color .18s ease,transform .18s ease}
+.quick-action:active,.btn:active{transform:translateY(1px)}
+.searchbox{min-width:0}
+.searchbox input{min-width:0}
+.chat-workspace{grid-template-columns:minmax(210px,250px) minmax(0,1fr)}
+.chat-sidebar,.chat-panel{min-width:0}
+.chat-form input{width:100%}
+.task-row>*{min-width:0}
+.metric-card strong{line-height:1.2}
+.page-title-row h1{overflow-wrap:anywhere}
+.notice,.toast{overflow-wrap:anywhere}
+#logoutButton{margin-top:4px}
+@media (min-width:761px) and (max-width:1050px){
+  .app-layout{grid-template-columns:218px minmax(0,1fr)}
+  .sidebar{padding:22px 12px}
+  .page-content{padding:25px 20px 40px}
+  .topbar{padding:0 20px}
+  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .content-grid{grid-template-columns:minmax(0,1fr)}
+  .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .app-layout{display:block}
+  .sidebar{width:min(290px,86vw);left:calc(-1 * min(300px,90vw));padding:20px 14px}
+  .sidebar.open{left:0}
+  .page-content{padding:20px 14px calc(28px + env(safe-area-inset-bottom))}
+  .topbar{position:sticky;top:0;z-index:15;backdrop-filter:blur(12px)}
+  .searchbox{flex:1;width:auto}
+  .page-title-row{align-items:flex-start}
+  .page-title-row h1{font-size:clamp(22px,5vw,28px);line-height:1.2}
+  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .metric-card{padding:14px}
+  .metric-top{flex-direction:row;align-items:center;gap:8px}
+  .metric-icon{flex:0 0 34px;width:34px;height:34px}
+  .metric-card strong{font-size:clamp(19px,4.5vw,25px)}
+  .content-grid,.chat-workspace{grid-template-columns:minmax(0,1fr)}
+  .quick-grid{grid-template-columns:minmax(0,1fr)}
+  .panel{padding:16px}
+  .panel-heading{flex-wrap:wrap}
+  .panel-heading>.btn{width:100%}
+  .inline-form,.user-form{display:grid;grid-template-columns:minmax(0,1fr)}
+  .inline-form>* ,.user-form>*{width:100%;min-width:0}
+  .task-row{align-items:flex-start}
+  .task-row select{width:100%;max-width:none}
+  .chat-sidebar{order:0}
+  .chat-panel{order:1}
+  .chat-messages{max-height:48vh;min-height:240px}
+  .chat-form{align-items:stretch}
+  .chat-form input{flex:1 1 100%}
+  .chat-form button{width:100%}
+  .toast{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;max-width:none}
+}
+@media(max-width:420px){
+  .topbar{padding:0 10px;gap:6px}
+  .searchbox{padding:9px 8px;gap:6px}
+  .searchbox input{font-size:13px}
+  .mobile-menu{padding:6px;font-size:19px}
+  .top-profile .avatar{width:32px;height:32px}
+  .page-content{padding-left:11px;padding-right:11px}
+  .metric-grid{gap:8px}
+  .metric-card{padding:11px}
+  .metric-top{align-items:flex-start;flex-direction:column}
+  .metric-card>small{line-height:1.4}
+  .panel{padding:13px}
+  .page-title-row p{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
