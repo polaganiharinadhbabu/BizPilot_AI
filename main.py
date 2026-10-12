@@ -40,6 +40,13 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=Fals
 
 app.include_router(chatbot_router)
 
+
+
+def require_business_user(user=Depends(get_current_user)):
+    if user.role == "admin":
+        raise HTTPException(status_code=403, detail="Admins cannot access private customer, invoice, task, or business-summary data.")
+    return user
+
 def user_view(user):
     return {"id": user.id, "name": user.name, "email": user.email, "role": user.role}
 
@@ -304,7 +311,7 @@ def change_user_status(user_id: int, data: dict, db: Session = Depends(get_db), 
     return {"message": "Account status updated."}
 
 @app.get("/customers")
-def list_customers(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def list_customers(db: Session = Depends(get_db), user=Depends(require_business_user)):
     query = select(models.Customer).order_by(models.Customer.id.desc())
     if user.role != "admin":
         query = query.where(models.Customer.owner_id == user.id)
@@ -312,7 +319,7 @@ def list_customers(db: Session = Depends(get_db), user=Depends(get_current_user)
     return [{"id": x.id, "name": x.name, "email": x.email, "created_at": x.created_at} for x in rows]
 
 @app.post("/customers", status_code=201)
-def create_customer(data: schemas.CustomerInput, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def create_customer(data: schemas.CustomerInput, db: Session = Depends(get_db), user=Depends(require_business_user)):
     if db.scalar(select(models.Customer).where(models.Customer.email == data.email.lower(), models.Customer.owner_id == user.id)):
         raise HTTPException(status_code=409, detail="Customer email already exists.")
     item = models.Customer(name=data.name.strip(), email=data.email.lower(), owner_id=user.id)
@@ -320,7 +327,7 @@ def create_customer(data: schemas.CustomerInput, db: Session = Depends(get_db), 
     return {"id": item.id, "name": item.name, "email": item.email, "created_at": item.created_at}
 
 @app.delete("/customers/{customer_id}")
-def delete_customer(customer_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def delete_customer(customer_id: int, db: Session = Depends(get_db), user=Depends(require_business_user)):
     item = db.get(models.Customer, customer_id)
     if not item or (user.role != "admin" and item.owner_id != user.id): raise HTTPException(status_code=404, detail="Customer not found.")
     if db.scalar(select(models.Invoice.id).where(models.Invoice.customer_id == customer_id).limit(1)):
@@ -329,7 +336,7 @@ def delete_customer(customer_id: int, db: Session = Depends(get_db), user=Depend
     return {"message": "Customer deleted."}
 
 @app.get("/invoices")
-def list_invoices(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def list_invoices(db: Session = Depends(get_db), user=Depends(require_business_user)):
     query = select(models.Invoice, models.Customer.name).join(models.Customer, models.Invoice.customer_id == models.Customer.id).order_by(models.Invoice.id.desc())
     if user.role != "admin":
         query = query.where(models.Invoice.owner_id == user.id)
@@ -337,7 +344,7 @@ def list_invoices(db: Session = Depends(get_db), user=Depends(get_current_user))
     return [{"id": inv.id, "customer_id": inv.customer_id, "customer_name": name, "amount": float(inv.amount), "status": inv.status, "created_at": inv.created_at} for inv, name in rows]
 
 @app.post("/invoices", status_code=201)
-def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(require_business_user)):
     customer = db.get(models.Customer, data.customer_id)
     if not customer or (user.role != "admin" and customer.owner_id != user.id):
         raise HTTPException(status_code=404, detail="Customer not found.")
@@ -346,7 +353,7 @@ def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(get_db), us
     return {"id": item.id, "customer_id": item.customer_id, "amount": float(item.amount), "status": item.status}
 
 @app.patch("/invoices/{invoice_id}")
-def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = Depends(require_business_user)):
     """Update an existing invoice without creating a new invoice ID."""
     item = db.get(models.Invoice, invoice_id)
     if not item or (user.role != "admin" and item.owner_id != user.id):
@@ -361,7 +368,7 @@ def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = De
     return {"message": "Invoice updated successfully.", "id": item.id, "customer_id": item.customer_id, "amount": float(item.amount), "status": item.status}
 
 @app.patch("/invoices/{invoice_id}/pay")
-def mark_invoice_paid(invoice_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def mark_invoice_paid(invoice_id: int, db: Session = Depends(require_business_user)):
     item = db.get(models.Invoice, invoice_id)
     if not item or (user.role != "admin" and item.owner_id != user.id): raise HTTPException(status_code=404, detail="Invoice not found.")
     item.status = "Paid"; db.commit()
@@ -370,7 +377,7 @@ def mark_invoice_paid(invoice_id: int, db: Session = Depends(get_db), user=Depen
 @app.get("/tasks")
 def list_tasks(
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_business_user)
 ):
     query = select(models.Task).order_by(models.Task.id.desc())
 
@@ -397,7 +404,7 @@ def list_tasks(
 def create_task(
     data: schemas.TaskInput,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_business_user)
 ):
     assigned_to = data.assigned_to
 
@@ -436,7 +443,7 @@ def update_task(
     task_id: int,
     data: dict,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_business_user)
 ):
     item = db.get(models.Task, task_id)
 
@@ -547,7 +554,7 @@ def delete_task(
         "id": task_id
     }
 @app.get("/dashboard")
-def dashboard(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def dashboard(db: Session = Depends(get_db), user=Depends(require_business_user)):
     customer_query = select(func.count(models.Customer.id))
     invoice_query = select(func.count(models.Invoice.id))
     total_query = select(func.coalesce(func.sum(models.Invoice.amount), 0))
@@ -571,10 +578,17 @@ def dashboard(db: Session = Depends(get_db), user=Depends(get_current_user)):
 
 @app.get("/admin/overview")
 def admin_overview(db: Session = Depends(get_db), admin=Depends(require_admin)):
-    return {"users": db.scalar(select(func.count(models.User.id)) ) or 0,
-            "customers": db.scalar(select(func.count(models.Customer.id))) or 0,
-            "invoices": db.scalar(select(func.count(models.Invoice.id))) or 0,
-            "tasks": db.scalar(select(func.count(models.Task.id))) or 0}
+    total_users = db.scalar(select(func.count(models.User.id))) or 0
+    active_users = db.scalar(select(func.count(models.User.id)).where(models.User.is_active == 1)) or 0
+    inactive_users = total_users - active_users
+    return {
+        "users": total_users,
+        "active_users": active_users,
+        "inactive_users": inactive_users,
+        "privacy_mode": "enabled",
+        "business_records_visible": False,
+        "api_status": "operational"
+    }
 
 @app.post("/assistant")
 def assistant(data: dict, user=Depends(get_current_user)):
@@ -594,7 +608,7 @@ def assistant(data: dict, user=Depends(get_current_user)):
 def delete_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_business_user)
 ):
     item = db.get(models.Invoice, invoice_id)
 
