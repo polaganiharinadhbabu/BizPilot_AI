@@ -344,7 +344,7 @@ def list_invoices(db: Session = Depends(get_db), user=Depends(require_business_u
     return [{"id": inv.id, "customer_id": inv.customer_id, "customer_name": name, "amount": float(inv.amount), "status": inv.status, "created_at": inv.created_at} for inv, name in rows]
 
 @app.post("/invoices", status_code=201)
-def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(require_business_user)):
+def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(get_db), user=Depends(require_business_user)):
     customer = db.get(models.Customer, data.customer_id)
     if not customer or (user.role != "admin" and customer.owner_id != user.id):
         raise HTTPException(status_code=404, detail="Customer not found.")
@@ -353,7 +353,7 @@ def create_invoice(data: schemas.InvoiceInput, db: Session = Depends(require_bus
     return {"id": item.id, "customer_id": item.customer_id, "amount": float(item.amount), "status": item.status}
 
 @app.patch("/invoices/{invoice_id}")
-def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = Depends(require_business_user)):
+def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = Depends(get_db), user=Depends(require_business_user)):
     """Update an existing invoice without creating a new invoice ID."""
     item = db.get(models.Invoice, invoice_id)
     if not item or (user.role != "admin" and item.owner_id != user.id):
@@ -368,7 +368,7 @@ def update_invoice(invoice_id: int, data: schemas.InvoiceInput, db: Session = De
     return {"message": "Invoice updated successfully.", "id": item.id, "customer_id": item.customer_id, "amount": float(item.amount), "status": item.status}
 
 @app.patch("/invoices/{invoice_id}/pay")
-def mark_invoice_paid(invoice_id: int, db: Session = Depends(require_business_user)):
+def mark_invoice_paid(invoice_id: int, db: Session = Depends(get_db), user=Depends(require_business_user)):
     item = db.get(models.Invoice, invoice_id)
     if not item or (user.role != "admin" and item.owner_id != user.id): raise HTTPException(status_code=404, detail="Invoice not found.")
     item.status = "Paid"; db.commit()
@@ -530,7 +530,7 @@ def update_task(
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_business_user)
 ):
     item = db.get(models.Task, task_id)
 
