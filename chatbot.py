@@ -173,6 +173,17 @@ def conversation_view(conversation):
 # --------------------------------------------------
 
 def get_business_context(db: Session, user):
+    if user.role == "admin":
+        return {
+            "logged_in_user": {"name": user.name, "role": "admin"},
+            "privacy_notice": "Admin accounts cannot access customer, invoice, task, or user conversation content.",
+            "customer_count": 0,
+            "customers": [],
+            "invoice_summary": {"total_invoice_count": 0, "paid_count": 0, "non_paid_count": 0, "total_amount": "0", "paid_amount": "0", "non_paid_amount": "0"},
+            "invoices": [],
+            "visible_task_count": 0,
+            "tasks": []
+        }
     customer_query = select(models.Customer).order_by(models.Customer.id.desc())
     invoice_query = (
         select(models.Invoice, models.Customer.name)
@@ -180,9 +191,8 @@ def get_business_context(db: Session, user):
         .order_by(models.Invoice.id.desc())
     )
 
-    if user.role != "admin":
-        customer_query = customer_query.where(models.Customer.owner_id == user.id)
-        invoice_query = invoice_query.where(models.Invoice.owner_id == user.id)
+    customer_query = customer_query.where(models.Customer.owner_id == user.id)
+    invoice_query = invoice_query.where(models.Invoice.owner_id == user.id)
 
     customers = db.scalars(customer_query).all()
     invoice_rows = db.execute(invoice_query).all()
@@ -227,8 +237,7 @@ def get_business_context(db: Session, user):
         models.Task.id.desc()
     )
 
-    if user.role != "admin":
-        task_query = task_query.where(models.Task.assigned_to == user.id)
+    task_query = task_query.where(models.Task.assigned_to == user.id)
 
     tasks = db.scalars(task_query).all()
 
