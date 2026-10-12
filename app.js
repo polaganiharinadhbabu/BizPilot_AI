@@ -245,6 +245,7 @@ function hideNotice() {
 // NAVIGATION
 
 function switchView(name) {
+  document.body.classList.toggle("admin-subpage", name !== "overview");
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.add("hidden");
   });
