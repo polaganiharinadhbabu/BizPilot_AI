@@ -173,23 +173,19 @@ def conversation_view(conversation):
 # --------------------------------------------------
 
 def get_business_context(db: Session, user):
-    customers = db.scalars(
-        select(models.Customer).order_by(
-            models.Customer.id.desc()
-        )
-    ).all()
-
-    invoice_rows = db.execute(
-        select(
-            models.Invoice,
-            models.Customer.name
-        )
-        .join(
-            models.Customer,
-            models.Invoice.customer_id == models.Customer.id
-        )
+    customer_query = select(models.Customer).order_by(models.Customer.id.desc())
+    invoice_query = (
+        select(models.Invoice, models.Customer.name)
+        .join(models.Customer, models.Invoice.customer_id == models.Customer.id)
         .order_by(models.Invoice.id.desc())
-    ).all()
+    )
+
+    if user.role != "admin":
+        customer_query = customer_query.where(models.Customer.owner_id == user.id)
+        invoice_query = invoice_query.where(models.Invoice.owner_id == user.id)
+
+    customers = db.scalars(customer_query).all()
+    invoice_rows = db.execute(invoice_query).all()
 
     paid_rows = [
         (invoice, customer_name)
@@ -232,10 +228,7 @@ def get_business_context(db: Session, user):
     )
 
     if user.role != "admin":
-        task_query = task_query.where(
-            (models.Task.assigned_to == user.id)
-            | (models.Task.assigned_to.is_(None))
-        )
+        task_query = task_query.where(models.Task.assigned_to == user.id)
 
     tasks = db.scalars(task_query).all()
 
