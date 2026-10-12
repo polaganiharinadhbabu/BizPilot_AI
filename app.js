@@ -680,23 +680,30 @@ function renderTasks() {
 // TEAM
 
 async function loadTeam() {
-  const [overview, users] = await Promise.all([
+  const [overviewResult, usersResult] = await Promise.allSettled([
     api("/admin/overview"),
     api("/admin/users")
   ]);
 
+  const overview = overviewResult.status === "fulfilled" ? overviewResult.value : null;
+  const users = usersResult.status === "fulfilled" ? usersResult.value : [];
   usersCache = users;
 
-  if ($("teamCount")) {
-    $("teamCount").textContent = overview.users;
+  const totalUsers = overview?.users ?? users.length;
+  const activeUsers = overview?.active_users ?? users.filter((user) => user.is_active).length;
+  const inactiveUsers = overview?.inactive_users ?? Math.max(0, totalUsers - activeUsers);
+
+  if ($("teamCount")) $("teamCount").textContent = totalUsers;
+  if ($("teamActiveUsers")) $("teamActiveUsers").textContent = activeUsers;
+  if ($("teamInactiveUsers")) $("teamInactiveUsers").textContent = inactiveUsers;
+
+  if ($("adminHomeUsers")) $("adminHomeUsers").textContent = totalUsers;
+  if ($("adminHomeActive")) $("adminHomeActive").textContent = activeUsers;
+  if ($("adminHomeInactive")) $("adminHomeInactive").textContent = inactiveUsers;
+
+  if (usersResult.status === "rejected") {
+    throw usersResult.reason;
   }
-
-  if ($("teamActiveUsers")) $("teamActiveUsers").textContent = overview.active_users;
-  if ($("teamInactiveUsers")) $("teamInactiveUsers").textContent = overview.inactive_users;
-
-  if ($("adminHomeUsers")) $("adminHomeUsers").textContent = overview.users;
-  if ($("adminHomeActive")) $("adminHomeActive").textContent = overview.active_users;
-  if ($("adminHomeInactive")) $("adminHomeInactive").textContent = overview.inactive_users;
 
   if (!$("usersTable")) return;
 
