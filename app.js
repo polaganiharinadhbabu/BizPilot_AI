@@ -693,6 +693,10 @@ async function loadTeam() {
   if ($("teamActiveUsers")) $("teamActiveUsers").textContent = overview.active_users;
   if ($("teamInactiveUsers")) $("teamInactiveUsers").textContent = overview.inactive_users;
 
+  if ($("adminHomeUsers")) $("adminHomeUsers").textContent = overview.users;
+  if ($("adminHomeActive")) $("adminHomeActive").textContent = overview.active_users;
+  if ($("adminHomeInactive")) $("adminHomeInactive").textContent = overview.inactive_users;
+
   if (!$("usersTable")) return;
 
   $("usersTable").innerHTML = users.map((user) => `
@@ -1235,6 +1239,10 @@ async function initDashboard() {
 
     if (currentUser.role === "admin") {
       document.body.classList.add("is-admin");
+    }
+
+    if (currentUser.role === "admin") {
+      loadTeam().catch((error) => showToast(error.message));
     }
 
     if ($("dateLabel")) {
