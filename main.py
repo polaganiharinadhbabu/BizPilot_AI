@@ -274,6 +274,18 @@ def google_login(data: dict, db: Session = Depends(get_db)):
         db.refresh(user)
     return {"access_token": create_token(user.id, user.role), "token_type": "bearer", "user": user_view(user)}
 
+@app.patch("/auth/profile")
+def update_my_profile(data: dict, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if set(data) != {"name"}:
+        raise HTTPException(status_code=422, detail="Only the profile name can be updated here.")
+    name = data.get("name")
+    if not isinstance(name, str) or not name.strip():
+        raise HTTPException(status_code=422, detail="Name cannot be empty.")
+    user.name = name.strip()[:100]
+    db.commit()
+    db.refresh(user)
+    return user_view(user)
+
 @app.get("/auth/me")
 def me(user=Depends(get_current_user)):
     return user_view(user)
@@ -314,6 +326,18 @@ def list_customers(db: Session = Depends(get_db), user=Depends(require_business_
     query = query.where(models.Customer.owner_id == user.id)
     rows = db.scalars(query).all()
     return [{"id": x.id, "name": x.name, "email": x.email, "created_at": x.created_at} for x in rows]
+
+@app.get("/customers/{customer_id}/history")
+def customer_history(customer_id: int, db: Session = Depends(get_db), user=Depends(require_business_user)):
+    customer = db.scalar(select(models.Customer).where(models.Customer.id == customer_id, models.Customer.owner_id == user.id))
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found.")
+    invoices = db.scalars(select(models.Invoice).where(models.Invoice.customer_id == customer_id, models.Invoice.owner_id == user.id).order_by(models.Invoice.created_at.desc())).all()
+    return {
+        "customer": {"id": customer.id, "name": customer.name, "email": customer.email, "created_at": customer.created_at},
+        "invoice_history": [{"id": invoice.id, "amount": float(invoice.amount), "status": invoice.status, "created_at": invoice.created_at} for invoice in invoices],
+        "invoice_count": len(invoices)
+    }
 
 @app.post("/customers", status_code=201)
 def create_customer(data: schemas.CustomerInput, db: Session = Depends(get_db), user=Depends(require_business_user)):
