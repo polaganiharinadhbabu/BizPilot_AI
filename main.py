@@ -42,9 +42,6 @@ app.include_router(chatbot_router)
 
 
 
-def require_business_user(user=Depends(get_current_user)):
-    return user
-
 def user_view(user):
     return {"id": user.id, "name": user.name, "email": user.email, "role": user.role}
 
@@ -84,6 +81,10 @@ def get_current_user(
         )
 
     return user
+
+def require_business_user(user=Depends(get_current_user)):
+    return user
+
 
 def require_admin(user=Depends(get_current_user)):
     if user.role != "admin":
