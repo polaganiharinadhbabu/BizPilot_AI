@@ -665,8 +665,9 @@ def edit_user_message(
     for later in later_messages:
         db.delete(later)
 
-    message.content = content.strip()
+    # Remove the edited prompt and its later replies. The client resubmits the
+    # corrected prompt through the normal chat endpoint to generate a fresh answer.
+    db.delete(message)
     conversation.updated_at = datetime.now(ZoneInfo("Asia/Kolkata"))
     db.commit()
-    db.refresh(message)
-    return {"message": "Message updated.", "id": message.id, "content": message.content}
+    return {"message": "Previous message removed for regeneration.", "id": message_id, "content": content.strip()}
