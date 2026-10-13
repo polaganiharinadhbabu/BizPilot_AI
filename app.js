@@ -332,6 +332,10 @@ function switchView(name) {
 
 document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
+    if (button.dataset.view === "assistant") {
+      location.href = "lumora.html";
+      return;
+    }
     switchView(button.dataset.view);
   });
 });
