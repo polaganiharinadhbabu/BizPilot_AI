@@ -625,3 +625,39 @@ Text to translate:
                 "Check the backend terminal for the error."
             )
         )
+
+# --------------------------------------------------
+# EDIT A USER MESSAGE AND DISCARD ITS OLD FOLLOW-UP
+# PUT /chat/messages/{message_id}
+# --------------------------------------------------
+@router.put("/messages/{message_id}")
+def edit_user_message(
+    message_id: int,
+    data: dict,
+    db: Session = Depends(get_db),
+    user=Depends(get_chat_user)
+):
+    content = data.get("content")
+    if not isinstance(content, str) or not content.strip() or len(content.strip()) > 10000:
+        raise HTTPException(status_code=422, detail="Message must contain 1 to 10000 characters.")
+
+    message = db.get(models.ChatMessage, message_id)
+    if not message or message.role != "user":
+        raise HTTPException(status_code=404, detail="User message not found.")
+
+    conversation = get_user_conversation(db, message.conversation_id, user.id)
+    later_messages = db.scalars(
+        select(models.ChatMessage).where(
+            models.ChatMessage.conversation_id == conversation.id,
+            models.ChatMessage.id > message.id
+        ).order_by(models.ChatMessage.id.asc())
+    ).all()
+    for later in later_messages:
+        db.delete(later)
+
+    # Remove the edited prompt and its later replies. The client resubmits the
+    # corrected prompt through the normal chat endpoint to generate a fresh answer.
+    db.delete(message)
+    conversation.updated_at = datetime.now(ZoneInfo("Asia/Kolkata"))
+    db.commit()
+    return {"message": "Previous message removed for regeneration.", "id": message_id, "content": content.strip()}
