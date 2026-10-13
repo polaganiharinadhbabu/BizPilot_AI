@@ -86,6 +86,7 @@
   $("mobileScrim").onclick=closeSidebar;$("historySearch").addEventListener("input",renderHistory);
   document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{input.value=b.dataset.prompt;input.focus();input.style.height="auto";input.style.height=input.scrollHeight+"px";}));
   $("logout").onclick=()=>{sessionStorage.removeItem("bp_token");localStorage.removeItem("bp_token");location.replace("index.html");};
+  $("backToBizPilot").addEventListener("click",e=>{ if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) { e.preventDefault(); history.back(); } });
   document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();newChat();}});
   loadHistory().then(()=>{const last=conversations[0];if(last)openConversation(last.id).catch(e=>toast(e.message));}).catch(e=>{toast(e.message);if(e.message==="Please log in.")location.replace("index.html");});
 })();
