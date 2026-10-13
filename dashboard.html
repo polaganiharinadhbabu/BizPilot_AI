@@ -16,7 +16,7 @@
   <aside class="sidebar" id="sidebar">
 
     <a class="brand" href="#">
-      <span class="brand-mark">✦</span>
+      <span class="brand-mark" aria-label="BizPilot AI logo"><svg viewBox="0 0 48 48" role="img" aria-label="BizPilot AI"><defs><linearGradient id="bpBrand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9af0c3"/><stop offset="1" stop-color="#45c98c"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="14" fill="#123c30"/><path d="M14 12h11a8 8 0 0 1 5 14 7 7 0 0 1-5 12H14V12zm7 6v7h4a3.5 3.5 0 0 0 0-7h-4zm0 13v3h4a1.5 1.5 0 0 0 0-3h-4z" fill="url(#bpBrand)"/><path d="M34 8l1.8 4.2L40 14l-4.2 1.8L34 20l-1.8-4.2L28 14l4.2-1.8L34 8z" fill="#f4fffa"/></svg></span>
       <span>
         <b>BizPilot <i>AI</i></b>
         <small>Smarter Business. Simpler.</small>
@@ -50,6 +50,12 @@
         ♙ <span>Team & access</span>
       </button>
     </nav>
+
+    <div class="sidebar-profile">
+      <div class="profile-avatar" id="sidebarAvatar">H</div>
+      <div class="profile-meta"><b id="sidebarProfileName">My profile</b><small id="sidebarProfileEmail">Account settings</small></div>
+      <button class="profile-settings-button" id="profileSettingsButton" type="button" aria-label="Open profile settings" title="Profile settings">⚙</button>
+    </div>
 
     <div class="sidebar-bottom">
       <div class="help-card">
