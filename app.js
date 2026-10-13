@@ -1713,3 +1713,56 @@ switchView = function (name) {
   document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();newChat();}});
   loadHistory().then(()=>{const last=conversations[0];if(last)openConversation(last.id).catch(e=>toast(e.message));}).catch(e=>{toast(e.message);if(e.message==="Please log in.")location.replace("index.html");});
 })();
+
+
+/* Profile settings, accessible dialog, and workspace preferences */
+(function initProfileSettings() {
+  const modal = document.getElementById("profileSettingsModal");
+  if (!modal) return;
+  const byId = (id) => document.getElementById(id);
+  const open = () => {
+    const user = window.currentUser || window.user || {};
+    const email = user.email || user.username || "";
+    const name = user.full_name || user.name || user.display_name || email.split("@")[0] || "My profile";
+    byId("settingsDisplayName").value = localStorage.getItem("bizpilot.displayName") || name;
+    byId("settingsEmail").value = email;
+    byId("settingsAccountName").textContent = name;
+    byId("settingsAccountEmail").textContent = email || "Signed-in workspace";
+    byId("settingsAvatar").textContent = (name.trim()[0] || "B").toUpperCase();
+    byId("settingsTheme").value = localStorage.getItem("bizpilot.theme") || "system";
+    byId("settingsCompact").checked = localStorage.getItem("bizpilot.compact") === "true";
+    byId("settingsMessage").textContent = "";
+    modal.classList.add("is-visible");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("settings-open");
+    byId("settingsDisplayName").focus();
+  };
+  const close = () => {
+    modal.classList.remove("is-visible");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("settings-open");
+  };
+  ["profileSettingsButton","footerSettingsButton"].forEach(id => byId(id)?.addEventListener("click", open));
+  ["closeProfileSettings","cancelProfileSettings"].forEach(id => byId(id)?.addEventListener("click", close));
+  modal.addEventListener("click", event => { if (event.target === modal) close(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && modal.classList.contains("is-visible")) close(); });
+  byId("profileSettingsForm")?.addEventListener("submit", event => {
+    event.preventDefault();
+    const name = byId("settingsDisplayName").value.trim();
+    if (!name) { byId("settingsMessage").textContent = "Please enter a display name."; return; }
+    localStorage.setItem("bizpilot.displayName", name);
+    localStorage.setItem("bizpilot.theme", byId("settingsTheme").value);
+    localStorage.setItem("bizpilot.compact", String(byId("settingsCompact").checked));
+    byId("sidebarProfileName").textContent = name;
+    byId("sidebarProfileEmail").textContent = byId("settingsEmail").value || "Account settings";
+    byId("sidebarAvatar").textContent = name[0].toUpperCase();
+    byId("settingsAccountName").textContent = name;
+    document.body.classList.toggle("compact-layout", byId("settingsCompact").checked);
+    document.documentElement.dataset.theme = byId("settingsTheme").value;
+    byId("settingsMessage").textContent = "Preferences saved on this device.";
+  });
+  byId("footerYear").textContent = String(new Date().getFullYear());
+  const savedName = localStorage.getItem("bizpilot.displayName");
+  if (savedName) { byId("sidebarProfileName").textContent = savedName; byId("sidebarAvatar").textContent = savedName[0].toUpperCase(); }
+  document.body.classList.toggle("compact-layout", localStorage.getItem("bizpilot.compact") === "true");
+})();
