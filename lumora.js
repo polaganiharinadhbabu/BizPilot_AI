@@ -73,7 +73,7 @@
       save.disabled=true;save.textContent="Updating…";
       try{
         await api("/chat/messages/"+item.id,{method:"PUT",body:JSON.stringify({content:text})});
-        await openConversation(currentId);await sendMessage(text,currentId);toast("Message updated.");
+        await sendMessage(text,currentId);toast("Message edited and regenerated.");
       }catch(e){toast(e.message);save.disabled=false;save.textContent="Save & regenerate";}
     };
     controls.append(cancel,save);body.append(label,area,controls);area.focus();area.setSelectionRange(area.value.length,area.value.length);
